@@ -23,7 +23,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           id={inputId}
-          className={`w-full rounded-2xl bg-[var(--bg-card)] border text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] p-3.5 min-h-[100px] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 resize-y ${
+          className={`w-full rounded-2xl bg-[var(--bg-card)] border text-base sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] p-3.5 min-h-[100px] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 resize-y ${
             error
               ? 'border-[var(--primary-coral)] focus:ring-[var(--primary-coral)]/30'
               : 'border-[var(--border-default)] hover:border-[var(--text-muted)]'

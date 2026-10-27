@@ -9,10 +9,14 @@ import {
   query,
   where,
   orderBy,
+  limit,
+  startAfter,
   serverTimestamp,
-  type Firestore,
+  QueryDocumentSnapshot,
+  DocumentData,
+  QueryConstraint,
 } from 'firebase/firestore';
-import { ref, deleteObject, type FirebaseStorage } from 'firebase/storage';
+import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { generateSearchTokens, sanitizeDescription } from '@/config/products';
 import type { ProductItem, UserProfile, ProductStatus } from '@/types';
@@ -198,7 +202,6 @@ export async function deleteProduct(productId: string): Promise<void> {
 
   const product = await getProductById(productId);
 
-  // Clean up storage media if present
   if (product && storage) {
     const filesToDelete: string[] = [];
     if (product.coverImage && product.coverImage.includes('firebasestorage')) {
@@ -213,9 +216,7 @@ export async function deleteProduct(productId: string): Promise<void> {
 
     for (const urlOrPath of filesToDelete) {
       try {
-        const fileRef = urlOrPath.startsWith('gs://') || urlOrPath.startsWith('products/')
-          ? ref(storage, urlOrPath)
-          : ref(storage, urlOrPath);
+        const fileRef = ref(storage, urlOrPath);
         await deleteObject(fileRef);
       } catch (err) {
         console.warn('Storage file cleanup notice:', err);
@@ -270,6 +271,221 @@ export async function adminRejectProduct(productId: string, reason: string): Pro
     status: 'rejected',
     rejectionReason: trimmed,
     updatedAt: serverTimestamp(),
+  });
+}
+
+export interface ExploreFilters {
+  category?: string;
+  platform?: string;
+  techStack?: string;
+  licenseType?: string;
+  searchQuery?: string;
+}
+
+export interface PaginatedProductsResult {
+  products: ProductItem[];
+  lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null;
+  hasMore: boolean;
+  totalLoaded: number;
+}
+
+/**
+ * Query published products with cursor pagination and optional filters
+ */
+export async function getPublishedProducts(
+  filters: ExploreFilters = {},
+  pageSize: number = 12,
+  cursorDoc: QueryDocumentSnapshot<DocumentData> | null = null
+): Promise<PaginatedProductsResult> {
+  if (!db) return { products: [], lastVisibleDoc: null, hasMore: false, totalLoaded: 0 };
+
+  try {
+    const constraints: QueryConstraint[] = [where('status', '==', 'published')];
+
+    // Category filter
+    if (filters.category && filters.category !== 'all') {
+      constraints.push(where('category', '==', filters.category));
+    }
+
+    // License type filter
+    if (filters.licenseType && filters.licenseType !== 'all') {
+      constraints.push(where('licenseType', '==', filters.licenseType));
+    }
+
+    // Search query with searchTokens (array-contains-any up to 10 tokens)
+    const rawQuery = filters.searchQuery?.trim().toLowerCase() || '';
+    const queryTokens = rawQuery
+      ? Array.from(new Set(rawQuery.split(/[\s,._-]+/).filter((t) => t.length >= 2))).slice(0, 10)
+      : [];
+
+    const hasSearchTokens = queryTokens.length > 0;
+    if (hasSearchTokens) {
+      constraints.push(where('searchTokens', 'array-contains-any', queryTokens));
+    } else if (filters.platform && filters.platform !== 'all') {
+      // Only add platform array-contains if searchTokens array-contains-any is not used
+      constraints.push(where('platforms', 'array-contains', filters.platform));
+    }
+
+    constraints.push(orderBy('createdAt', 'desc'));
+
+    if (cursorDoc) {
+      constraints.push(startAfter(cursorDoc));
+    }
+
+    // Fetch one extra item to accurately determine hasMore
+    constraints.push(limit(pageSize + 1));
+
+    const q = query(collection(db, 'products'), ...constraints);
+    const snap = await getDocs(q);
+
+    let docs = snap.docs;
+    let items = docs.map((d) => ({ doc: d, item: parseProductDoc(d.id, d.data()) }));
+
+    // Memory filter for platform if searchTokens was used
+    if (hasSearchTokens && filters.platform && filters.platform !== 'all') {
+      items = items.filter((i) => i.item.platforms.includes(filters.platform as any));
+    }
+
+    // Memory filter for techStack if specified
+    if (filters.techStack && filters.techStack !== 'all') {
+      const targetTech = filters.techStack.toLowerCase();
+      items = items.filter((i) =>
+        i.item.techStack.some((t) => t.toLowerCase() === targetTech)
+      );
+    }
+
+    const hasMore = items.length > pageSize;
+    const pageItems = items.slice(0, pageSize);
+    const lastDoc = pageItems.length > 0 ? pageItems[pageItems.length - 1].doc : null;
+
+    return {
+      products: pageItems.map((p) => p.item),
+      lastVisibleDoc: lastDoc,
+      hasMore,
+      totalLoaded: pageItems.length,
+    };
+  } catch (err) {
+    console.warn('getPublishedProducts query notice:', err);
+    return { products: [], lastVisibleDoc: null, hasMore: false, totalLoaded: 0 };
+  }
+}
+
+/**
+ * Fetch latest published products for Homepage feed
+ */
+export async function getLatestPublishedProducts(limitCount: number = 8): Promise<ProductItem[]> {
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, 'products'),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => parseProductDoc(d.id, d.data()));
+  } catch (err) {
+    console.warn('getLatestPublishedProducts query notice:', err);
+    return [];
+  }
+}
+
+/**
+ * Fetch more products by the same seller (published only)
+ */
+export async function getSellerPublishedProducts(
+  sellerId: string,
+  excludeProductId?: string,
+  limitCount: number = 4
+): Promise<ProductItem[]> {
+  if (!db || !sellerId) return [];
+  try {
+    const q = query(
+      collection(db, 'products'),
+      where('sellerId', '==', sellerId),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount + 1)
+    );
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => parseProductDoc(d.id, d.data()))
+      .filter((p) => p.id !== excludeProductId)
+      .slice(0, limitCount);
+  } catch (err) {
+    console.warn('getSellerPublishedProducts query notice:', err);
+    return [];
+  }
+}
+
+/**
+ * Fetch similar published products (same category or tags)
+ */
+export async function getSimilarPublishedProducts(
+  category: string,
+  tags: string[],
+  excludeProductId?: string,
+  limitCount: number = 4
+): Promise<ProductItem[]> {
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, 'products'),
+      where('status', '==', 'published'),
+      where('category', '==', category),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount + 2)
+    );
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => parseProductDoc(d.id, d.data()))
+      .filter((p) => p.id !== excludeProductId)
+      .slice(0, limitCount);
+  } catch (err) {
+    console.warn('getSimilarPublishedProducts query notice:', err);
+    return [];
+  }
+}
+
+/**
+ * Check if the user has already reported this product
+ */
+export async function hasUserReportedProduct(reporterUid: string, productId: string): Promise<boolean> {
+  if (!db || !reporterUid || !productId) return false;
+  try {
+    const reportRef = doc(db, 'reports', `${reporterUid}_${productId}`);
+    const snap = await getDoc(reportRef);
+    return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Report a product (creates document in reports/{reporterUid_productId})
+ */
+export async function submitProductReport(
+  reporterUid: string,
+  productId: string,
+  reason: string,
+  details?: string
+): Promise<void> {
+  if (!db) throw new Error('Firestore is not configured.');
+  if (!reporterUid) throw new Error('Authentication required to submit report.');
+  if (!productId) throw new Error('Product ID is required.');
+  if (!reason.trim()) throw new Error('Report reason is required.');
+
+  const reportId = `${reporterUid}_${productId}`;
+  const reportRef = doc(db, 'reports', reportId);
+
+  await setDoc(reportRef, {
+    id: reportId,
+    reporterUid,
+    productId,
+    reason: reason.trim(),
+    details: (details || '').trim(),
+    createdAt: serverTimestamp(),
+    status: 'pending',
   });
 }
 

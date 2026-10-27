@@ -2,21 +2,18 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Globe,
   Smartphone,
   Monitor,
-  CheckCircle2,
-  Clock,
   AlertTriangle,
-  ExternalLink,
   Edit3,
   Copy,
   Trash2,
   EyeOff,
   Send,
-  Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -44,15 +41,19 @@ export function ProductCard({
   onSubmitForReview,
 }: ProductCardProps) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const isBn = i18n.language?.startsWith('bn');
 
   const categoryObj = PRODUCT_CATEGORIES.find((c) => c.id === product.category);
   const categoryLabel = categoryObj ? (isBn ? categoryObj.labelBn : categoryObj.labelEn) : product.category;
 
-  const lowestPrice =
+  const lowestPackage =
     product.packages && product.packages.length > 0
-      ? Math.min(...product.packages.map((p) => p.priceAmount))
-      : 0;
+      ? product.packages.reduce((min, p) => (p.priceAmount < min.priceAmount ? p : min), product.packages[0])
+      : null;
+
+  const lowestPrice = lowestPackage ? lowestPackage.priceAmount : 0;
+  const currency = lowestPackage ? lowestPackage.currency : 'USD';
 
   const statusVariant = {
     draft: 'neutral',
@@ -86,10 +87,21 @@ export function ProductCard({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a')) {
+      return;
+    }
+    navigate(`/p/${product.id}`);
+  };
+
   return (
-    <div className="group rounded-3xl bg-[var(--bg-card)] border border-[var(--border-default)] hover:border-[var(--border-glass-hover)] shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-float)] transition-all duration-300 flex flex-col overflow-hidden text-[var(--text-primary)] relative">
-      {/* Media Header */}
-      <div className="relative w-full h-48 bg-gradient-to-br from-[var(--brand-indigo)] to-[#0D0B1A] overflow-hidden">
+    <div
+      onClick={handleCardClick}
+      className="group rounded-3xl bg-[var(--bg-card)] border border-[var(--border-default)] hover:border-[var(--lilac-border)] shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-float)] transition-all duration-300 flex flex-col overflow-hidden text-[var(--text-primary)] cursor-pointer relative"
+    >
+      {/* Media Header with reserved aspect-ratio (16:9) to prevent CLS */}
+      <div className="relative w-full aspect-video bg-gradient-to-br from-[var(--brand-indigo)] to-[#0D0B1A] overflow-hidden">
         {product.coverImage ? (
           <Image
             src={product.coverImage}
@@ -107,7 +119,7 @@ export function ProductCard({
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10 pointer-events-none">
-          <Badge variant="glass" size="sm" className="backdrop-blur-md">
+          <Badge variant="glass" size="sm" className="backdrop-blur-md font-semibold">
             {categoryLabel}
           </Badge>
 
@@ -127,11 +139,9 @@ export function ProductCard({
       {/* Body Content */}
       <div className="p-5 flex-1 flex flex-col justify-between gap-4">
         <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-extrabold text-base sm:text-lg text-[var(--text-primary)] line-clamp-1 group-hover:text-[var(--primary-coral)] transition-colors">
-              {product.title || 'Untitled Draft'}
-            </h4>
-          </div>
+          <h4 className="font-extrabold text-base sm:text-lg text-[var(--text-primary)] line-clamp-1 group-hover:text-[var(--primary-coral)] transition-colors">
+            {product.title || 'Untitled Draft'}
+          </h4>
 
           <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
             {product.summary || 'No summary provided.'}
@@ -170,22 +180,33 @@ export function ProductCard({
 
         {/* Footer Info & Pricing */}
         <div className="pt-3 border-t border-[var(--border-default)] flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.sellerUsername) {
+                navigate(`/u/${product.sellerUsername}`);
+              }
+            }}
+            className="flex items-center gap-2 min-w-0 text-left hover:opacity-80 transition-opacity"
+          >
             <Avatar
               src={product.sellerAvatarUrl}
               alt={product.sellerBrandName || product.sellerUsername}
               name={product.sellerBrandName || product.sellerUsername}
               size="xs"
             />
-            <span className="font-semibold text-[var(--text-secondary)] truncate text-[11px]">
+            <span className="font-semibold text-[var(--text-secondary)] truncate text-[11px] hover:text-[var(--primary-coral)]">
               {product.sellerBrandName || `@${product.sellerUsername}`}
             </span>
-          </div>
+          </button>
 
           <div className="text-right shrink-0">
-            <span className="text-[10px] text-[var(--text-muted)] block">Informational</span>
+            <span className="text-[10px] text-[var(--text-muted)] block">
+              {t('explore.setBySeller')}
+            </span>
             <span className="font-black text-sm text-[var(--mint-success)]">
-              {lowestPrice === 0 ? 'Free' : `$${lowestPrice}`}
+              {lowestPrice === 0 ? 'Free' : `${currency} $${lowestPrice}`}
             </span>
           </div>
         </div>
@@ -199,7 +220,10 @@ export function ProductCard({
                   variant="ghost"
                   size="sm"
                   leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                  onClick={() => onEdit(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(product);
+                  }}
                 >
                   {t('dashboard.editBtn')}
                 </Button>
@@ -210,7 +234,10 @@ export function ProductCard({
                   variant="ghost"
                   size="sm"
                   leftIcon={<Copy className="w-3.5 h-3.5" />}
-                  onClick={() => onDuplicate(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate(product);
+                  }}
                   title={t('dashboard.duplicateBtn')}
                 />
               )}
@@ -220,7 +247,10 @@ export function ProductCard({
                   variant="ghost"
                   size="sm"
                   leftIcon={<EyeOff className="w-3.5 h-3.5 text-amber-500" />}
-                  onClick={() => onUnpublish(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnpublish(product);
+                  }}
                 >
                   {t('dashboard.unpublishBtn')}
                 </Button>
@@ -231,7 +261,10 @@ export function ProductCard({
                   variant="ghost"
                   size="sm"
                   leftIcon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
-                  onClick={() => onDelete(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(product);
+                  }}
                   title={t('dashboard.deleteBtn')}
                 />
               )}
@@ -243,7 +276,10 @@ export function ProductCard({
                   variant="primary"
                   size="sm"
                   leftIcon={<Send className="w-3.5 h-3.5" />}
-                  onClick={() => onSubmitForReview(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSubmitForReview(product);
+                  }}
                 >
                   Submit
                 </Button>

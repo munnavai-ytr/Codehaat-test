@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Settings,
   ShieldCheck,
-  Store,
 } from 'lucide-react';
 import { useSession } from '@/hooks/use-session';
 
@@ -41,7 +40,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[var(--bg-card)]/90 backdrop-blur-lg border-t border-[var(--border-default)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 py-1.5"
+      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[var(--bg-card)]/90 backdrop-blur-lg border-t border-[var(--border-default)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 py-1.5"
     >
       <div className="flex items-center justify-around max-w-md mx-auto">
         {tabs.map((tab) => {
@@ -57,7 +56,7 @@ export function MobileTabBar() {
               key={tab.path}
               type="button"
               onClick={() => navigate(tab.path)}
-              className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer relative group ${
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-1 min-h-[44px] rounded-xl transition-all cursor-pointer relative group ${
                 isActive
                   ? 'text-[var(--primary-coral)] font-bold'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium'

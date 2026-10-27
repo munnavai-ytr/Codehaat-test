@@ -10,12 +10,10 @@ import {
   FileCode,
   LayoutDashboard,
   ShieldCheck,
-  User,
   Settings,
   Store,
   BookmarkCheck,
   ChevronRight,
-  LogOut,
 } from 'lucide-react';
 import { useSession } from '@/hooks/use-session';
 import { Avatar } from '@/components/ui/Avatar';
@@ -27,7 +25,7 @@ export function DesktopNavRail() {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isGuest, isAuthenticated, isSeller, isAdmin, logout } = useSession();
+  const { user, isGuest, isAuthenticated, isSeller, isAdmin } = useSession();
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   const navItems = [
@@ -53,7 +51,7 @@ export function DesktopNavRail() {
 
   return (
     <>
-      <aside className="hidden md:flex flex-col w-64 shrink-0 min-h-[calc(100dvh-4rem)] bg-[var(--bg-card)]/50 backdrop-blur-sm border-r border-[var(--border-default)] p-4 justify-between">
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 min-h-[calc(100dvh-4rem)] bg-[var(--bg-card)]/50 backdrop-blur-sm border-r border-[var(--border-default)] p-4 justify-between">
         {/* Navigation Links */}
         <div className="flex flex-col gap-1.5">
           <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
@@ -188,7 +186,7 @@ export function DesktopNavRail() {
               Privacy
             </button>
             <span>•</span>
-            <span className="font-mono text-[10px]">V1.0 (P2)</span>
+            <span className="font-mono text-[10px]">V1.0</span>
           </div>
         </div>
       </aside>

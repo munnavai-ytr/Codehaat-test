@@ -31,7 +31,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className={`w-full rounded-2xl bg-[var(--bg-card)] border text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 ${
+            className={`w-full rounded-2xl bg-[var(--bg-card)] border text-base sm:text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 ${
               leftIcon ? 'pl-10' : 'pl-4'
             } ${rightIcon ? 'pr-10' : 'pr-4'} py-2.5 min-h-[44px] ${
               error

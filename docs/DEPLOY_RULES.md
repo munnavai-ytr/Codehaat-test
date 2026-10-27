@@ -1,6 +1,6 @@
-# Deploying Firestore & Storage Security Rules
+# Deploying Firestore & Storage Security Rules and Indexes
 
-This guide outlines the exact steps to publish the hardened security rules in `firestore.rules` and `storage.rules` to your Firebase project.
+This guide outlines the exact steps to publish the security rules in `firestore.rules`, `storage.rules`, and composite indexes in `firestore.indexes.json` to your Firebase project.
 
 ---
 
@@ -24,21 +24,24 @@ firebase use --add <YOUR_FIREBASE_PROJECT_ID>
 ```
 
 ### 3. Deploy Firestore Rules
+Deploys `firestore.rules` (including the published product read restrictions and `reports` collection rule):
 ```bash
 firebase deploy --only firestore:rules
 ```
 
 ### 4. Deploy Storage Rules
+Deploys `storage.rules`:
 ```bash
 firebase deploy --only storage
 ```
 
 ### 5. Deploy Firestore Indexes
+Deploys composite indexes defined in `firestore.indexes.json` for catalog search, category filtering, and sorting:
 ```bash
 firebase deploy --only firestore:indexes
 ```
 
-### 6. Deploy All simultaneously
+### 6. Deploy All Simultaneously
 ```bash
 firebase deploy --only firestore:rules,storage,firestore:indexes
 ```
@@ -59,6 +62,17 @@ firebase deploy --only firestore:rules,storage,firestore:indexes
 2. Click the **Rules** tab at the top.
 3. Copy the entire contents of `storage.rules` from this repository.
 4. Paste it into the editor and click **Publish**.
+
+### Firestore Composite Indexes
+1. In the Firebase Console, navigate to **Build** > **Firestore Database** > **Indexes** tab.
+2. If you execute a query from the application that requires a composite index that is not yet built, Firestore will log a direct index creation link in the browser developer console. Clicking that link opens the Firebase Console with all fields pre-filled.
+3. Alternatively, click **Add index** and enter the fields matching `firestore.indexes.json`:
+   - Collection: `products`
+   - Status (Ascending) + Category (Ascending) + CreatedAt (Descending)
+   - Status (Ascending) + LicenseType (Ascending) + CreatedAt (Descending)
+   - Status (Ascending) + Platforms (Arrays) + CreatedAt (Descending)
+   - Status (Ascending) + SearchTokens (Arrays) + CreatedAt (Descending)
+   - SellerId (Ascending) + Status (Ascending) + CreatedAt (Descending)
 
 ---
 

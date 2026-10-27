@@ -177,5 +177,22 @@ service cloud.firestore {
       allow delete: if isAdmin()
         || (isPermanent() && resource.data.sellerId == request.auth.uid);
     }
+
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+
+      allow create: if isSignedIn()
+        && reportId == request.auth.uid + '_' + request.resource.data.productId
+        && request.resource.data.keys().hasOnly(['id', 'reporterUid', 'productId', 'reason', 'details', 'createdAt', 'status'])
+        && request.resource.data.id == reportId
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.productId is string
+        && request.resource.data.reason in ['malware', 'copyright', 'misleading', 'spam', 'other']
+        && request.resource.data.details is string && request.resource.data.details.size() <= 1000
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
   }
 }

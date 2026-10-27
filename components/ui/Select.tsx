@@ -31,7 +31,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={inputId}
-            className={`w-full appearance-none rounded-2xl bg-[var(--bg-card)] border text-sm text-[var(--text-primary)] px-4 py-2.5 pr-10 min-h-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 ${
+            className={`w-full appearance-none rounded-2xl bg-[var(--bg-card)] border text-base sm:text-sm text-[var(--text-primary)] px-4 py-2.5 pr-10 min-h-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--lilac-accent)]/40 ${
               error
                 ? 'border-[var(--primary-coral)] focus:ring-[var(--primary-coral)]/30'
                 : 'border-[var(--border-default)] hover:border-[var(--text-muted)]'
