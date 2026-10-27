@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isPermanent() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(uid) {
+      return isPermanent() && request.auth.uid == uid;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+
+    match /users/{uid}/{fileName} {
+      allow get: if true;
+      allow create: if isOwner(uid)
+        && isImage()
+        && request.resource.size < 5 * 1024 * 1024
+        && fileName.matches('^(avatar|cover)_[0-9]+\\.webp$');
+      allow update: if false;
+      allow delete: if isOwner(uid);
+    }
+
+    match /products/{sellerId}/{productId}/{fileName} {
+      allow get: if true;
+      allow create, update: if isOwner(sellerId)
+        && (
+          (isImage()
+            && request.resource.size < 10 * 1024 * 1024
+            && fileName.matches('^[A-Za-z0-9_.-]{1,80}\\.webp$'))
+          ||
+          (request.resource.contentType == 'application/vnd.android.package-archive'
+            && request.resource.size < 100 * 1024 * 1024
+            && fileName.matches('^preview_[A-Za-z0-9_.]{1,60}\\.apk$'))
+        );
+      allow delete: if isOwner(sellerId);
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "CodeHaat - Software Marketplace",
+  "description": "A free, software-only marketplace where anyone can preview, talk, and deal on apps, websites, templates, and source-code projects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

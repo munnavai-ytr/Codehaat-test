@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --bg-canvas: #FAF7F2;
+    --bg-card: #FFFFFF;
+    --bg-card-subtle: #F4EFEA;
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --border-glass: rgba(30, 27, 75, 0.08);
+    --border-glass-hover: rgba(30, 27, 75, 0.16);
+    --border-default: rgba(30, 27, 75, 0.1);
+    
+    --text-primary: #1E1B4B;
+    --text-secondary: #47436B;
+    --text-muted: #726E91;
+
+    --brand-indigo: #1E1B4B;
+    --primary-coral: #E85542;
+    --primary-coral-hover: #D14332;
+    --primary-coral-surface: rgba(232, 85, 66, 0.08);
+
+    --mint-success: #0E8564;
+    --mint-surface: rgba(45, 212, 167, 0.14);
+
+    --lilac-accent: #796CF0;
+    --lilac-surface: rgba(201, 195, 255, 0.22);
+    --lilac-border: rgba(121, 108, 240, 0.25);
+
+    --shadow-soft: 0 4px 20px -2px rgba(30, 27, 75, 0.06);
+    --shadow-float: 0 12px 36px -4px rgba(30, 27, 75, 0.12);
+  }
+
+  .dark {
+    --bg-canvas: #0D0B1A;
+    --bg-card: #151329;
+    --bg-card-subtle: #1C1938;
+    --bg-glass: rgba(21, 19, 41, 0.82);
+    --border-glass: rgba(201, 195, 255, 0.12);
+    --border-glass-hover: rgba(201, 195, 255, 0.24);
+    --border-default: rgba(201, 195, 255, 0.14);
+
+    --text-primary: #FAF7F2;
+    --text-secondary: #CBC7E6;
+    --text-muted: #8F8AA8;
+
+    --brand-indigo: #C9C3FF;
+    --primary-coral: #FF6B57;
+    --primary-coral-hover: #FF8574;
+    --primary-coral-surface: rgba(255, 107, 87, 0.15);
+
+    --mint-success: #2DD4A7;
+    --mint-surface: rgba(45, 212, 167, 0.18);
+
+    --lilac-accent: #C9C3FF;
+    --lilac-surface: rgba(201, 195, 255, 0.12);
+    --lilac-border: rgba(201, 195, 255, 0.2);
+
+    --shadow-soft: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
+    --shadow-float: 0 16px 40px -4px rgba(0, 0, 0, 0.7);
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 250ms ease, color 250ms ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Deal Pulse signature animation */
+@keyframes deal-pulse {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(45, 212, 167, 0.65);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 9px rgba(45, 212, 167, 0);
+  }
+  100% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(45, 212, 167, 0);
+  }
+}
+
+.deal-pulse {
+  animation: deal-pulse 2.2s infinite ease-out;
+}
+
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+/* Device Frame Perspective Tilt */
+.device-frame-tilt {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.device-frame-tilt:hover {
+  transform: rotateX(2deg) rotateY(-2deg) translateY(-4px);
+}
+
+/* Wave section mask / accent */
+.aurora-gradient {
+  background: radial-gradient(
+    circle at 50% -20%,
+    rgba(201, 195, 255, 0.25) 0%,
+    rgba(45, 212, 167, 0.1) 40%,
+    rgba(255, 107, 87, 0.05) 70%,
+    transparent 100%
+  );
+}
+
+.dark .aurora-gradient {
+  background: radial-gradient(
+    circle at 50% -20%,
+    rgba(121, 108, 240, 0.22) 0%,
+    rgba(45, 212, 167, 0.08) 45%,
+    rgba(255, 107, 87, 0.04) 75%,
+    transparent 100%
+  );
+}
+
+/* Custom scrollbar for sleek aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
