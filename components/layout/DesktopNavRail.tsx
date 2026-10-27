@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Home,
   Compass,
+  Sparkles,
   MessageSquare,
   FileCode,
   LayoutDashboard,
@@ -30,7 +31,11 @@ export function DesktopNavRail() {
 
   const navItems = [
     { label: t('nav.home'), path: '/', icon: Home },
+    { label: t('feed.title'), path: '/feed', icon: Sparkles },
     { label: t('nav.explore'), path: '/explore', icon: Compass },
+    ...(isAuthenticated && !isGuest
+      ? [{ label: t('nav.saved'), path: '/saved', icon: BookmarkCheck }]
+      : []),
     {
       label: t('nav.messages'),
       path: '/messages',

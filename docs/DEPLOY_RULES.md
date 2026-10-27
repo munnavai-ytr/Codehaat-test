@@ -55,6 +55,9 @@ firebase deploy --only firestore:rules,storage,firestore:indexes
 2. Select your project and navigate to **Build** > **Firestore Database**.
 3. Click the **Rules** tab at the top.
 4. Copy the entire contents of `firestore.rules` from this repository.
+   - Now includes security validation for `follows`, `likes`, `saves`, and `reports`.
+   - Requires permanent (non-anonymous) accounts for likes, follows, and saves.
+   - Restricts saves read access exclusively to document owners.
 5. Paste it into the editor and click **Publish**.
 
 ### Storage Rules
@@ -66,13 +69,18 @@ firebase deploy --only firestore:rules,storage,firestore:indexes
 ### Firestore Composite Indexes
 1. In the Firebase Console, navigate to **Build** > **Firestore Database** > **Indexes** tab.
 2. If you execute a query from the application that requires a composite index that is not yet built, Firestore will log a direct index creation link in the browser developer console. Clicking that link opens the Firebase Console with all fields pre-filled.
-3. Alternatively, click **Add index** and enter the fields matching `firestore.indexes.json`:
-   - Collection: `products`
-   - Status (Ascending) + Category (Ascending) + CreatedAt (Descending)
-   - Status (Ascending) + LicenseType (Ascending) + CreatedAt (Descending)
-   - Status (Ascending) + Platforms (Arrays) + CreatedAt (Descending)
-   - Status (Ascending) + SearchTokens (Arrays) + CreatedAt (Descending)
-   - SellerId (Ascending) + Status (Ascending) + CreatedAt (Descending)
+3. Alternatively, deploy via `firebase deploy --only firestore:indexes` or click **Add index** with:
+   - **`products`**:
+     - Status (Ascending) + Category (Ascending) + CreatedAt (Descending)
+     - Status (Ascending) + LicenseType (Ascending) + CreatedAt (Descending)
+     - Status (Ascending) + Platforms (Arrays) + CreatedAt (Descending)
+     - Status (Ascending) + SearchTokens (Arrays) + CreatedAt (Descending)
+     - SellerId (Ascending) + Status (Ascending) + CreatedAt (Descending)
+     - Status (Ascending) + SellerId (Ascending) + CreatedAt (Descending)
+   - **`follows`**:
+     - FollowerId (Ascending) + CreatedAt (Descending)
+   - **`saves`**:
+     - UserId (Ascending) + CreatedAt (Descending)
 
 ---
 

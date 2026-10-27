@@ -60,7 +60,12 @@ CodeHaat is a free, software-only marketplace where developers and creators can 
   - Product Detail Page (`/p/:productId`): image gallery with touch swipe, keyboard arrows, thumbnail carousel, and fullscreen lightbox; full metadata, features list, tech stack, demo credentials note; pricing packages with informational non-payment notice; seller profile card; real queries for "More from this seller" and "Similar products" (hidden when empty); APK download with version & size; link copy & Web Share API; report modal creating `reports/{uid_productId}`; owner/admin "Not public yet" banner
   - Home Page (`/`): updated with category shortcuts from `PRODUCT_CATEGORIES` and "Latest software listings" from real published Firestore products (hidden when empty)
   - Updated `firestore.rules` for published product access and `reports` creation with field validation; updated `firestore.indexes.json`
-- **Prompt 5: Feed, Follow, Like, Save & Seller Storefront**
+- **Prompt 5: Feed, Follow, Like, Save & Seller Storefront [COMPLETED]**
+  - Feed (`/` and `/feed`): "Latest" and "Following" tabs; Following queries chunked in 30-seller batches with merged `createdAt` sort; single column mobile / ~600px centered column desktop; FeedCard with touch swipe image carousel, like with real count and optimistic rollback, save with optimistic rollback, quick live preview (`DeviceFramePreview` modal), link copy/share; infinite scroll sentinel + fallback load more button
+  - Require-Login Flow: guests tapping like/save/follow trigger the Save account modal with context explanation; action automatically resumes upon login/upgrade; optimistic UI with rollback on failure; double-tap guard
+  - Saved Products (`/saved`, signed-in users only): real Firestore grid of user's saved items with unsave action; navigation links in user menu and desktop rail
+  - Seller Storefront (`/u/:username`): cover, avatar, brand name, headline, bio, skills, languages, location, external links, real member-since date; real stats via Firestore `getCountFromServer` (published products count, follower count) with in-memory TTL caching; follow/unfollow toggle; owner edit profile button; message button behind `featureFlags.chat`; tabs (Products & About); handles 404, sellers without products, and seller viewing their own page; title sync
+  - Security rules & indexes: `follows`, `likes`, `saves` with permanent-user enforcement, ID verification, no self-follow, owner-only read for saves, public read for likes/follows; composite indexes in `firestore.indexes.json`
 - **Prompt 6: Smart Links, Deal Room & Link Analytics**
 - **Prompt 7: Real-Time Messenger**
 - **Prompt 8: AI Sales Agent**
@@ -96,4 +101,7 @@ CodeHaat is a free, software-only marketplace where developers and creators can 
 - `usernames/{usernameLower}`: Unique username reservation claim
 - `products/{productId}`: Software product listing (`published`, `pending`, `draft`, `rejected`, `unpublished`)
 - `reports/{reporterUid_productId}`: Product moderation reports (`pending`, `reviewed`)
+- `follows/{followerId_followingId}`: Follower social graph records (`followerId`, `followingId`, `createdAt`)
+- `likes/{userId_productId}`: Product likes (`userId`, `productId`, `sellerId`, `createdAt`)
+- `saves/{userId_productId}`: User saved products (`userId`, `productId`, `createdAt`)
 - `admins/{uid}`: Manual document existence indicates root admin status

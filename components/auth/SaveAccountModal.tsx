@@ -12,9 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 interface SaveAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
+  customReason?: string;
+  onSuccess?: () => void;
 }
 
-export function SaveAccountModal({ isOpen, onClose }: SaveAccountModalProps) {
+export function SaveAccountModal({ isOpen, onClose, customReason, onSuccess }: SaveAccountModalProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const {
@@ -52,6 +54,7 @@ export function SaveAccountModal({ isOpen, onClose }: SaveAccountModalProps) {
         type: 'success',
       });
       handleClose();
+      onSuccess?.();
     }
   };
 
@@ -80,6 +83,7 @@ export function SaveAccountModal({ isOpen, onClose }: SaveAccountModalProps) {
         type: 'success',
       });
       handleClose();
+      onSuccess?.();
     }
   };
 
@@ -88,10 +92,16 @@ export function SaveAccountModal({ isOpen, onClose }: SaveAccountModalProps) {
       isOpen={isOpen}
       onClose={handleClose}
       title={t('guest.upgradeTitle')}
-      description={t('guest.upgradeSubtitle')}
+      description={customReason || t('guest.upgradeSubtitle')}
       maxWidth="md"
     >
       <div className="flex flex-col gap-5 pt-2">
+        {customReason && (
+          <div className="p-3 rounded-2xl bg-[var(--coral-surface)] border border-[var(--primary-coral)]/30 text-xs text-[var(--primary-coral)] font-semibold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span>{customReason}</span>
+          </div>
+        )}
         {/* Value Proposition bullets */}
         <div className="p-3.5 rounded-2xl bg-[var(--bg-card-subtle)] border border-[var(--border-default)] flex flex-col gap-2 text-xs text-[var(--text-secondary)]">
           <div className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">

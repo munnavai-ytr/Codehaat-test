@@ -10,9 +10,11 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { AppShell } from '@/components/layout/AppShell';
 
 import { HomePage } from '@/views/HomePage';
+import { FeedPage } from '@/views/FeedPage';
 import { ExplorePage } from '@/views/ExplorePage';
 import { ProductDetailPage } from '@/views/ProductDetailPage';
 import { StorefrontPage } from '@/views/StorefrontPage';
+import { SavedPage } from '@/views/SavedPage';
 import { DealRoomPage } from '@/views/DealRoomPage';
 import { MessagesPage } from '@/views/MessagesPage';
 import { ConversationPage } from '@/views/ConversationPage';
@@ -64,9 +66,18 @@ export function DealwaveApp() {
               <AppShell>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
+                  <Route path="/feed" element={<FeedPage />} />
                   <Route path="/explore" element={<ExplorePage />} />
                   <Route path="/p/:productId" element={<ProductDetailPage />} />
                   <Route path="/u/:username" element={<StorefrontPage />} />
+                  <Route
+                    path="/saved"
+                    element={
+                      <RequireUser>
+                        <SavedPage />
+                      </RequireUser>
+                    }
+                  />
                   <Route path="/deal/:productId" element={<DealRoomPage />} />
                   <Route path="/messages" element={<MessagesPage />} />
                   <Route path="/messages/:conversationId" element={<ConversationPage />} />

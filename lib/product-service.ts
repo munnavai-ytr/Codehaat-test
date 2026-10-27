@@ -489,6 +489,71 @@ export async function submitProductReport(
   });
 }
 
+/**
+ * Query published products from sellers the user is following.
+ * Handles Firestore 'in' query limit of 30 values by chunking.
+ */
+export async function getFollowingProducts(
+  sellerIds: string[],
+  pageSize: number = 10,
+  cursorDoc: QueryDocumentSnapshot<DocumentData> | null = null
+): Promise<PaginatedProductsResult> {
+  if (!db || !sellerIds || sellerIds.length === 0) {
+    return { products: [], lastVisibleDoc: null, hasMore: false, totalLoaded: 0 };
+  }
+
+  const firestore = db;
+
+  try {
+    const chunks: string[][] = [];
+    for (let i = 0; i < sellerIds.length; i += 30) {
+      chunks.push(sellerIds.slice(i, i + 30));
+    }
+
+    const chunkQueries = chunks.map((chunk) => {
+      const constraints: QueryConstraint[] = [
+        where('status', '==', 'published'),
+        where('sellerId', 'in', chunk),
+        orderBy('createdAt', 'desc'),
+        limit(pageSize + 1),
+      ];
+      if (cursorDoc) {
+        constraints.push(startAfter(cursorDoc));
+      }
+      return getDocs(query(collection(firestore, 'products'), ...constraints));
+    });
+
+    const snapshots = await Promise.all(chunkQueries);
+    const docMap = new Map<string, { doc: QueryDocumentSnapshot<DocumentData>; item: ProductItem }>();
+
+    for (const snap of snapshots) {
+      for (const d of snap.docs) {
+        if (!docMap.has(d.id)) {
+          docMap.set(d.id, { doc: d, item: parseProductDoc(d.id, d.data()) });
+        }
+      }
+    }
+
+    const sorted = Array.from(docMap.values()).sort(
+      (a, b) => new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime()
+    );
+
+    const hasMore = sorted.length > pageSize;
+    const pageItems = sorted.slice(0, pageSize);
+    const lastDoc = pageItems.length > 0 ? pageItems[pageItems.length - 1].doc : null;
+
+    return {
+      products: pageItems.map((p) => p.item),
+      lastVisibleDoc: lastDoc,
+      hasMore,
+      totalLoaded: pageItems.length,
+    };
+  } catch (err) {
+    console.warn('getFollowingProducts error:', err);
+    return { products: [], lastVisibleDoc: null, hasMore: false, totalLoaded: 0 };
+  }
+}
+
 function parseProductDoc(id: string, data: Record<string, any>): ProductItem {
   return {
     id,

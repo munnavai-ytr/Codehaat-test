@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,43 +9,20 @@ import {
   Eye,
   MessageSquare,
   ShieldCheck,
-  Code2,
   ArrowRight,
   Layers,
-  Sparkles,
   Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ProductCard } from '@/components/product/ProductCard';
+import { FeedView } from '@/components/feed/FeedView';
 import { PRODUCT_CATEGORIES } from '@/config/products';
-import { getLatestPublishedProducts } from '@/lib/product-service';
 import { brandConfig } from '@/src/config/brand';
-import type { ProductItem } from '@/types';
 
 export function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isBn = i18n.language?.startsWith('bn');
-
-  const [latestProducts, setLatestProducts] = useState<ProductItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadLatest() {
-      const items = await getLatestPublishedProducts(8);
-      if (isMounted) {
-        setLatestProducts(items);
-        setIsLoading(false);
-      }
-    }
-    loadLatest();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <div className="flex flex-col gap-10 md:gap-14 pb-16">
@@ -177,36 +154,21 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Latest Products Section (Hidden when there are no published products) */}
-      {!isLoading && latestProducts.length > 0 && (
-        <section className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-                {t('explore.latestProductsTitle')}
-              </h2>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Recently published software projects ready for live preview and direct deals.
-              </p>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-              onClick={() => navigate('/explore')}
-            >
-              View Catalog
-            </Button>
+      {/* Community Feed Stream */}
+      <section className="flex flex-col gap-6 pt-4 border-t border-[var(--border-default)]/60">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 max-w-[620px] mx-auto w-full">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+              {t('feed.title')}
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              {t('feed.subtitle')}
+            </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {latestProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
+        <FeedView initialTab="latest" />
+      </section>
     </div>
   );
 }

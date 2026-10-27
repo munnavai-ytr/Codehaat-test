@@ -289,6 +289,20 @@ export function TopBar() {
                     </button>
                   )}
 
+                  {!isGuest && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate('/saved');
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl hover:bg-[var(--bg-card-subtle)] text-left cursor-pointer"
+                    >
+                      <BookmarkCheck className="w-3.5 h-3.5 text-[var(--mint-success)]" />
+                      <span>{t('nav.saved')}</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {

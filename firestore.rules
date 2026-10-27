@@ -194,5 +194,49 @@ service cloud.firestore {
 
       allow update, delete: if isAdmin();
     }
+
+    match /follows/{followId} {
+      allow read: if true;
+
+      allow create: if isPermanent()
+        && followId == request.auth.uid + '_' + request.resource.data.followingId
+        && request.resource.data.keys().hasOnly(['followerId', 'followingId', 'createdAt'])
+        && request.resource.data.followerId == request.auth.uid
+        && request.resource.data.followingId is string
+        && request.resource.data.followingId != request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      allow delete: if isPermanent()
+        && resource.data.followerId == request.auth.uid;
+    }
+
+    match /likes/{likeId} {
+      allow read: if true;
+
+      allow create: if isPermanent()
+        && likeId == request.auth.uid + '_' + request.resource.data.productId
+        && request.resource.data.keys().hasOnly(['userId', 'productId', 'sellerId', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.productId is string
+        && request.resource.data.sellerId is string
+        && request.resource.data.createdAt == request.time;
+
+      allow delete: if isPermanent()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    match /saves/{saveId} {
+      allow read: if isPermanent() && resource.data.userId == request.auth.uid;
+
+      allow create: if isPermanent()
+        && saveId == request.auth.uid + '_' + request.resource.data.productId
+        && request.resource.data.keys().hasOnly(['userId', 'productId', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.productId is string
+        && request.resource.data.createdAt == request.time;
+
+      allow delete: if isPermanent()
+        && resource.data.userId == request.auth.uid;
+    }
   }
 }
